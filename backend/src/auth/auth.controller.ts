@@ -7,8 +7,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  login(@Body() loginDto: LoginDto) {
-    const result = this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto) {
+    const result = await this.authService.login(loginDto);
     if (result.isErr()) {
       throw new UnauthorizedException(result.error.message);
     }
@@ -16,3 +16,4 @@ export class AuthController {
     return result.value;
   }
 }
+export { LoginDto };
