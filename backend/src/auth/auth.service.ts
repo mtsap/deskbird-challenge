@@ -19,6 +19,12 @@ type Payload = {
   role: string;
 };
 
+export enum LoginErrorTypes {
+  InvalidCredentials = 'Invalid Credentials',
+  UserNotFound = 'User Not Found',
+  JWTSigningError = 'JWT Signing Error',
+}
+
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
@@ -53,7 +59,10 @@ export class AuthService {
 
       const safeSign = fromThrowable(
         (p: Payload) => this.jwtService.sign(p),
-        () => ({ message: 'Failed to sign JWT token' }),
+        () => ({
+          message: 'Failed to sign JWT token',
+          type: LoginErrorTypes.JWTSigningError,
+        }),
       );
 
       const tokenResult = safeSign(payload);
@@ -69,6 +78,7 @@ export class AuthService {
 
     return err({
       message: 'Invalid Credentials',
+      type: LoginErrorTypes.InvalidCredentials,
     });
   }
 }

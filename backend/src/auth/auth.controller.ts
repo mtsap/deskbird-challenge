@@ -1,5 +1,11 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { AuthService, LoginErrorTypes } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
@@ -10,7 +16,10 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
     if (result.isErr()) {
-      throw new UnauthorizedException(result.error.message);
+      if (result.error.type === LoginErrorTypes.InvalidCredentials) {
+        throw new UnauthorizedException(result.error.message);
+      }
+      throw new InternalServerErrorException(result.error.message);
     }
 
     return result.value;
