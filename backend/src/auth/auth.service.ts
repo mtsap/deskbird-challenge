@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -11,8 +11,6 @@ export class AuthService {
       };
     }
 
-    return {
-      message: 'Invalid credentials',
-    };
+    throw new UnauthorizedException('Invalid username or password');
   }
 }
