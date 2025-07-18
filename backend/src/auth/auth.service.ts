@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { err, ok } from 'neverthrow';
+import { LoginDto } from './auth.controller';
 
 @Injectable()
 export class AuthService {
-  login({ username, password }: { username: string; password: string }) {
+  login({ username, password }: LoginDto) {
     // TODO: Dummy logic — replace with actual auth logic or JWT
     if (username === 'admin' && password === 'password') {
       return ok({
