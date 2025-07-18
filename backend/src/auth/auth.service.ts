@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { err, ok } from 'neverthrow';
-import { LoginDto } from './auth.controller';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
