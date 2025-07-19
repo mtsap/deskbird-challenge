@@ -16,10 +16,14 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
     if (result.isErr()) {
-      if (result.error.type === LoginErrorTypes.InvalidCredentials) {
-        throw new UnauthorizedException(result.error.message);
+      const error = result.error;
+
+      switch (error.type) {
+        case LoginErrorTypes.InvalidCredentials:
+          throw new UnauthorizedException(error.message);
+        default:
+          throw new InternalServerErrorException(error.message);
       }
-      throw new InternalServerErrorException(result.error.message);
     }
 
     return result.value;

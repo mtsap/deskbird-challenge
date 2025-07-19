@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
-import { err, fromThrowable, ok } from 'neverthrow';
+import { err, fromThrowable, ok, Result } from 'neverthrow';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -12,11 +12,21 @@ type Payload = {
   role: string;
 };
 
+export type LoginSuccess = {
+  access_token: string;
+  message: string;
+};
+
 export enum LoginErrorTypes {
   InvalidCredentials = 'Invalid Credentials',
   UserNotFound = 'User Not Found',
   JWTSigningError = 'JWT Signing Error',
 }
+
+export type LoginError = {
+  message: string;
+  type: LoginErrorTypes;
+};
 
 @Injectable()
 export class AuthService {
@@ -57,7 +67,10 @@ export class AuthService {
     }
   }
 
-  async login({ username, password }: LoginDto) {
+  async login({
+    username,
+    password,
+  }: LoginDto): Promise<Result<LoginSuccess, LoginError>> {
     const resultAuthUser = await this.getAuthUserByUsername(username);
     if (resultAuthUser.isErr()) {
       return err(resultAuthUser.error);
