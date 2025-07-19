@@ -6,6 +6,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export enum UserRole {
+  ADMIN = 'admin',
+  USER = 'user',
+}
+
 @Entity()
 export class AuthUser {
   @PrimaryGeneratedColumn()
@@ -17,6 +22,11 @@ export class AuthUser {
   @Column()
   hashedPassword: string;
 
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
