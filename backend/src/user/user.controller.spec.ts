@@ -11,6 +11,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ok, err } from 'neverthrow';
+import { AuthUser, UserRole } from 'src/auth/auth-user.entity';
 
 // Mock the guards
 const mockJwtAuthGuard = { canActivate: jest.fn(() => true) };
@@ -22,7 +23,7 @@ interface MockUser {
   firstName: string;
   lastName: string;
   email: string;
-  authUser?: any; // Use any to avoid type conflicts
+  authUser?: AuthUser;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,9 +40,8 @@ describe('UserController', () => {
     authUser: {
       id: 1,
       username: 'johndoe',
-      email: 'john.doe@example.com',
       hashedPassword: 'hashedPassword',
-      role: 'user',
+      role: UserRole.USER,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -59,9 +59,8 @@ describe('UserController', () => {
       authUser: {
         id: 2,
         username: 'janesmith',
-        email: 'jane.smith@example.com',
         hashedPassword: 'hashedPassword',
-        role: 'user',
+        role: UserRole.ADMIN,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -105,23 +104,18 @@ describe('UserController', () => {
 
   describe('findAll', () => {
     it('should return an array of users when service succeeds', async () => {
-      // Arrange
       userService.findAll.mockResolvedValue(ok(mockUsers as User[]));
 
-      // Act
       const result = await controller.findAll();
 
-      // Assert
       expect(result).toEqual(mockUsers);
       expect(userService.findAll).toHaveBeenCalledTimes(1);
     });
 
     it('should throw InternalServerErrorException when service returns error', async () => {
-      // Arrange
       const errorMessage = 'Database connection failed';
       userService.findAll.mockResolvedValue(err(new Error(errorMessage)));
 
-      // Act & Assert
       await expect(controller.findAll()).rejects.toThrow(
         new InternalServerErrorException(new Error(errorMessage)),
       );
@@ -129,11 +123,9 @@ describe('UserController', () => {
     });
 
     it('should throw InternalServerErrorException when service returns generic error', async () => {
-      // Arrange
       const errorMessage = new Error('Generic error');
       userService.findAll.mockResolvedValue(err(errorMessage));
 
-      // Act & Assert
       await expect(controller.findAll()).rejects.toThrow(
         new InternalServerErrorException(errorMessage),
       );
@@ -149,28 +141,23 @@ describe('UserController', () => {
     };
 
     it('should return updated user when service succeeds', async () => {
-      // Arrange
       const updatedUser = { ...mockUser, ...updateUserDto };
       userService.update.mockResolvedValue(ok(updatedUser as User));
 
-      // Act
       const result = await controller.updateUser(1, updateUserDto);
 
-      // Assert
       expect(result).toEqual(updatedUser);
       expect(userService.update).toHaveBeenCalledWith(1, updateUserDto);
       expect(userService.update).toHaveBeenCalledTimes(1);
     });
 
     it('should throw NotFoundException when user is not found', async () => {
-      // Arrange
       const userNotFoundError = {
         message: 'User with ID 999 not found',
         type: 'UserNotFound' as const,
       };
       userService.update.mockResolvedValue(err(userNotFoundError));
 
-      // Act & Assert
       await expect(controller.updateUser(999, updateUserDto)).rejects.toThrow(
         new NotFoundException(userNotFoundError.message),
       );
@@ -179,11 +166,9 @@ describe('UserController', () => {
     });
 
     it('should throw InternalServerErrorException when service returns generic error', async () => {
-      // Arrange
       const genericError = new Error('Database error');
       userService.update.mockResolvedValue(err(genericError));
 
-      // Act & Assert
       await expect(controller.updateUser(1, updateUserDto)).rejects.toThrow(
         new InternalServerErrorException(genericError),
       );
@@ -192,11 +177,9 @@ describe('UserController', () => {
     });
 
     it('should throw InternalServerErrorException when service returns string error', async () => {
-      // Arrange
       const stringError = new Error('Something went wrong');
       userService.update.mockResolvedValue(err(stringError));
 
-      // Act & Assert
       await expect(controller.updateUser(1, updateUserDto)).rejects.toThrow(
         new InternalServerErrorException(stringError),
       );
@@ -205,29 +188,12 @@ describe('UserController', () => {
     });
 
     it('should properly parse id parameter', async () => {
-      // Arrange
       const updatedUser = { ...mockUser, ...updateUserDto };
       userService.update.mockResolvedValue(ok(updatedUser as User));
 
-      // Act
       await controller.updateUser(42, updateUserDto);
 
-      // Assert
       expect(userService.update).toHaveBeenCalledWith(42, updateUserDto);
     });
-  });
-
-  describe('Guards and Decorators', () => {
-    // Note: These tests would require the actual guard classes to be imported
-    // For now, we can test that the guards are being overridden correctly
-    it('should have mocked guards that allow access', () => {
-      expect(mockJwtAuthGuard.canActivate()).toBe(true);
-      expect(mockRolesGuard.canActivate()).toBe(true);
-    });
-
-    // If you need to test the actual decorators, you would need to:
-    // 1. Configure Jest to handle the src/ path alias
-    // 2. Or move these imports to use relative paths
-    // 3. Or create a separate integration test
   });
 });
