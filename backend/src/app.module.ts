@@ -25,7 +25,6 @@ const env = parsed.data;
       isGlobal: true,
       load: [() => env],
     }),
-    AuthModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -40,6 +39,7 @@ const env = parsed.data;
         synchronize: true, // ⚠️ disable in prod
       }),
     }),
+    AuthModule,
     UserModule,
   ],
   controllers: [AppController],
