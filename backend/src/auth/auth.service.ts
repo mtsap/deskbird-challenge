@@ -1,21 +1,11 @@
 import { Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
-import { err, fromPromise, fromThrowable, ok } from 'neverthrow';
+import { err, fromThrowable, ok } from 'neverthrow';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthUser } from './auth-user.entity';
 import { Repository } from 'typeorm';
-
-const getAuthUser = (username: string) => {
-  return ok({
-    username: 'mtsap',
-    userId: 1,
-    password:
-      '$argon2id$v=19$m=65536,t=3,p=1$nwIBkXVTfkGqu8hTrhJHoQ$e3k8aUl0LC0i9gVwb8hdDPJPpC8Ao/Hih1ksC+rta28',
-    role: 'admin',
-  });
-};
 
 type Payload = {
   sub: number;
