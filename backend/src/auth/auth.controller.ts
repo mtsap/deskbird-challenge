@@ -5,8 +5,9 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { AuthService, LoginErrorTypes } from './auth.service';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LoginErrorTypes } from './errors/login-error-types';
 
 @Controller('auth')
 export class AuthController {

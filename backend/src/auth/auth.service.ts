@@ -6,6 +6,7 @@ import * as argon2 from 'argon2';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthUser } from './auth-user.entity';
 import { Repository } from 'typeorm';
+import { LoginErrorTypes } from './errors/login-error-types';
 
 type Payload = {
   sub: number;
@@ -16,12 +17,6 @@ export type LoginSuccess = {
   access_token: string;
   message: string;
 };
-
-export enum LoginErrorTypes {
-  InvalidCredentials = 'Invalid Credentials',
-  UserNotFound = 'User Not Found',
-  JWTSigningError = 'JWT Signing Error',
-}
 
 export type LoginError = {
   message: string;
