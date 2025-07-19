@@ -3,6 +3,9 @@ import { err, fromThrowable, ok } from 'neverthrow';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AuthUser } from './auth-user.entity';
+import { Repository } from 'typeorm';
 
 const getAuthUser = (username: string) => {
   return ok({
@@ -30,6 +33,8 @@ export class AuthService {
   constructor(
     @Inject(Logger) private readonly logger: LoggerService,
     private readonly jwtService: JwtService,
+    @InjectRepository(AuthUser)
+    private authUserRepository: Repository<AuthUser>,
   ) {}
 
   async hashPassword(plainPassword: string): Promise<string> {

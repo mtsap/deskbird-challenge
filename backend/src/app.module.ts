@@ -2,9 +2,10 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { LoggingMiddleware } from './logging/middleware';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envSchema } from './config/env.validation';
 import * as dotenv from 'dotenv';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 dotenv.config();
 const parsed = envSchema.safeParse(process.env);
@@ -24,6 +25,20 @@ const env = parsed.data;
       load: [() => env],
     }),
     AuthModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get('POSTGRES_HOST'),
+        port: config.get('POSTGRES_PORT'),
+        username: config.get('POSTGRES_USER'),
+        password: config.get('POSTGRES_PASSWORD'),
+        database: config.get('POSTGRES_DB'),
+        autoLoadEntities: true,
+        synchronize: true, // ⚠️ disable in prod
+      }),
+    }),
   ],
   controllers: [AppController],
   providers: [],
