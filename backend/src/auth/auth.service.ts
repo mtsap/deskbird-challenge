@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
 import { err, fromThrowable, ok } from 'neverthrow';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -27,7 +27,10 @@ export enum LoginErrorTypes {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    @Inject(Logger) private readonly logger: LoggerService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async hashPassword(plainPassword: string): Promise<string> {
     return await argon2.hash(plainPassword, {
@@ -44,6 +47,7 @@ export class AuthService {
   async login({ username, password }: LoginDto) {
     const resultAuthUser = getAuthUser(username);
     if (resultAuthUser.isErr()) {
+      this.logger.error(resultAuthUser.error);
       return err(resultAuthUser.error);
     }
     const passwordValid = await this.verifyPassword(
@@ -59,10 +63,13 @@ export class AuthService {
 
       const safeSign = fromThrowable(
         (p: Payload) => this.jwtService.sign(p),
-        () => ({
-          message: 'Failed to sign JWT token',
-          type: LoginErrorTypes.JWTSigningError,
-        }),
+        (e) => {
+          this.logger.error(e);
+          return {
+            message: 'Failed to sign JWT token',
+            type: LoginErrorTypes.JWTSigningError,
+          };
+        },
       );
 
       const tokenResult = safeSign(payload);
