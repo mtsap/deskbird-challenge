@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envSchema } from './config/env.validation';
 import * as dotenv from 'dotenv';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from './user/user.module';
 
 dotenv.config();
 const parsed = envSchema.safeParse(process.env);
@@ -39,6 +40,7 @@ const env = parsed.data;
         synchronize: true, // ⚠️ disable in prod
       }),
     }),
+    UserModule,
   ],
   controllers: [AppController],
   providers: [],

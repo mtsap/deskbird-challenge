@@ -1,7 +1,8 @@
 import { DataSource } from 'typeorm';
-import { AuthUser, UserRole } from '../src/auth/auth-user.entity';
 import * as dotenv from 'dotenv';
 import * as argon2 from 'argon2';
+import { AuthUser, UserRole } from '../src/auth/auth-user.entity';
+import { User } from '../src/user/user.entity';
 
 dotenv.config();
 
@@ -21,16 +22,20 @@ const AppDataSource = new DataSource({
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  entities: [AuthUser],
+  entities: [AuthUser, User],
   synchronize: true, // OK for seed/dev, not prod
 });
 
 async function seed() {
   await AppDataSource.initialize();
-  const authUserRepo = AppDataSource.getRepository(AuthUser);
-  await authUserRepo.clear();
 
-  const usersPromises = Array.from({ length: 5 }, async (_, i) => {
+  await AppDataSource.query(
+    'TRUNCATE TABLE "user", "auth_user" RESTART IDENTITY CASCADE',
+  );
+  const userRepo = AppDataSource.getRepository(User);
+  const authUserRepo = AppDataSource.getRepository(AuthUser);
+
+  const authUsersPromises = Array.from({ length: 5 }, async (_, i) => {
     const username = `user${i + 1}`;
     const password = await hashPassword(`password${i + 1}`);
     const role = i === 0 ? UserRole.ADMIN : UserRole.USER;
@@ -42,9 +47,24 @@ async function seed() {
     });
   });
 
-  const users = await Promise.all(usersPromises);
+  const authUsers = await Promise.all(authUsersPromises);
 
-  await authUserRepo.save(users);
+  await authUserRepo.save(authUsers);
+
+  const users = Array.from({ length: 5 }, (_, i) => {
+    const firstName = `firstName${i + 1}`;
+    const lastName = `lastName${i + 1}`;
+    const email = `email${i + 1}@example.com`;
+
+    return userRepo.create({
+      firstName,
+      lastName,
+      email,
+      authUser: authUsers[i],
+    });
+  });
+
+  await userRepo.save(users);
 
   await AppDataSource.destroy();
 }

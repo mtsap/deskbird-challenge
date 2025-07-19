@@ -37,7 +37,6 @@ describe('AuthController', () => {
           provide: AuthService,
           useValue: mockAuthService,
         },
-        // Mock all AuthService dependencies to prevent instantiation issues
         {
           provide: Logger,
           useValue: {
