@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
-import { err, fromThrowable, ok } from 'neverthrow';
+import { err, fromPromise, fromThrowable, ok } from 'neverthrow';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -49,20 +49,37 @@ export class AuthService {
     return await argon2.verify(hash, plain);
   }
 
+  async getAuthUserByUsername(username: string) {
+    try {
+      const authUser = await this.authUserRepository.findOne({
+        where: { username },
+      });
+      if (!authUser) {
+        return err({
+          message: 'User not found',
+          type: LoginErrorTypes.UserNotFound,
+        });
+      }
+      return ok(authUser);
+    } catch (error) {
+      this.logger.error(error);
+      return err(error);
+    }
+  }
+
   async login({ username, password }: LoginDto) {
-    const resultAuthUser = getAuthUser(username);
+    const resultAuthUser = await this.getAuthUserByUsername(username);
     if (resultAuthUser.isErr()) {
-      this.logger.error(resultAuthUser.error);
       return err(resultAuthUser.error);
     }
     const passwordValid = await this.verifyPassword(
       password,
-      resultAuthUser.value.password,
+      resultAuthUser.value.hashedPassword,
     );
 
     if (username === resultAuthUser.value.username && passwordValid === true) {
       const payload: Payload = {
-        sub: resultAuthUser.value.userId,
+        sub: resultAuthUser.value.id,
         role: resultAuthUser.value.role,
       };
 
