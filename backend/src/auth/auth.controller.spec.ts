@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   UnauthorizedException,
@@ -7,7 +11,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
-import { AuthService, LoginSuccess } from './auth.service';
+import { AuthService, LoginError, LoginSuccess } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginErrorTypes } from './errors/login-error-types';
 import { AuthUser } from './auth-user.entity';
@@ -90,7 +94,7 @@ describe('AuthController', () => {
     });
 
     it('should throw UnauthorizedException when credentials are invalid', async () => {
-      const invalidCredentialsError = {
+      const invalidCredentialsError: LoginError = {
         message: 'Invalid Credentials',
         type: LoginErrorTypes.InvalidCredentials,
       };
@@ -104,7 +108,7 @@ describe('AuthController', () => {
     });
 
     it('should throw UnauthorizedException when user is not found', async () => {
-      const userNotFoundError = {
+      const userNotFoundError: LoginError = {
         message: 'User not found',
         type: LoginErrorTypes.UserNotFound,
       };
@@ -117,7 +121,7 @@ describe('AuthController', () => {
     });
 
     it('should throw InternalServerErrorException for JWT signing errors', async () => {
-      const jwtSigningError = {
+      const jwtSigningError: LoginError = {
         message: 'Failed to sign JWT token',
         type: LoginErrorTypes.JWTSigningError,
       };
@@ -130,7 +134,7 @@ describe('AuthController', () => {
     });
 
     it('should throw InternalServerErrorException for unknown error types', async () => {
-      const unknownError = {
+      const unknownError: LoginError = {
         message: 'Unknown error occurred',
         type: 'UNKNOWN_ERROR' as LoginErrorTypes, // Simulating an unknown error type
       };
@@ -147,7 +151,7 @@ describe('AuthController', () => {
         username: '',
         password: '',
       };
-      const invalidCredentialsError = {
+      const invalidCredentialsError: LoginError = {
         message: 'Invalid Credentials',
         type: LoginErrorTypes.InvalidCredentials,
       };
