@@ -23,7 +23,7 @@ const AppDataSource = new DataSource({
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
   entities: [AuthUser, User],
-  synchronize: true, // OK for seed/dev, not prod
+  synchronize: true,
 });
 
 async function seed() {
