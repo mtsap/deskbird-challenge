@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -22,7 +24,11 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+    const users = await this.userService.findAll();
+    if (users.isErr()) {
+      throw new InternalServerErrorException(users.error);
+    }
+    return users.value;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,7 +38,21 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    console.log('weeeee');
-    return this.userService.update(id, updateUserDto);
+    const result = await this.userService.update(id, updateUserDto);
+
+    if (result.isOk()) {
+      return result.value;
+    } else {
+      const error = result.error;
+
+      if (
+        typeof error !== 'string' &&
+        'type' in error &&
+        error.type === 'UserNotFound'
+      ) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException(error);
+    }
   }
 }
