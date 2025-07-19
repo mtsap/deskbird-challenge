@@ -27,6 +27,8 @@ export class AuthUser {
     enum: UserRole,
     default: UserRole.USER,
   })
+  role: UserRole;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
