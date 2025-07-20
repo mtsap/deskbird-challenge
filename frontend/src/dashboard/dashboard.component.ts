@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ToolbarModule } from 'primeng/toolbar';
@@ -9,6 +9,7 @@ import { MessageModule } from 'primeng/message';
 import { User } from '../users/user.interface';
 import { UserService } from '../users/user.service';
 import { AuthUserStateService } from '../auth/authUser-state.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,6 +28,16 @@ import { AuthUserStateService } from '../auth/authUser-state.service';
       <p-toolbar class="dashboard-toolbar">
         <div class="p-toolbar-group-start">
           <h1 class="dashboard-title">Users</h1>
+        </div>
+        <div class="p-toolbar-group-end">
+          <p-button
+            icon="pi pi-sign-out"
+            label="Logout"
+            severity="secondary"
+            size="small"
+            (click)="logout()"
+          >
+          </p-button>
         </div>
       </p-toolbar>
 
@@ -279,6 +290,7 @@ import { AuthUserStateService } from '../auth/authUser-state.service';
   ],
 })
 export class DashboardComponent implements OnInit {
+  private router = inject(Router);
   users: User[] = [];
   loading = true;
   error: string | null = null;
@@ -317,5 +329,10 @@ export class DashboardComponent implements OnInit {
     // TODO: Implement edit functionality
     console.log('Edit user:', user);
     // You can navigate to edit page or open a dialog here
+  }
+
+  logout() {
+    this.authUserStateService.clearUser();
+    this.router.navigate(['/login']);
   }
 }
