@@ -1,5 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CardModule } from 'primeng/card';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ButtonModule } from 'primeng/button';
@@ -8,11 +11,13 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { User } from '../users/user.interface';
-import { UserService } from '../users/user.service';
 import { AuthUserStateService } from '../auth/authUser-state.service';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { EditUserModalComponent } from './edit-user-modal.component';
+import { AppState } from '../app/app.state';
+import * as UserActions from '../users/user.actions';
+import * as UserSelectors from '../users/user.selectors';
 
 @Component({
   selector: 'app-dashboard',
@@ -50,15 +55,16 @@ import { EditUserModalComponent } from './edit-user-modal.component';
       <div class="dashboard-content">
         <!-- Error Message -->
         <p-message
-          *ngIf="error && !loading"
+          *ngIf="(error$ | async) && !(loading$ | async)"
           severity="error"
-          [text]="error"
+          [text]="(error$ | async) || ''"
           styleClass="error-message"
+          (onClose)="clearError()"
         >
         </p-message>
 
         <!-- Loading Skeleton -->
-        <div *ngIf="loading" class="loading-container">
+        <div *ngIf="loading$ | async" class="loading-container">
           <p-skeleton
             height="4rem"
             styleClass="mb-3"
@@ -67,8 +73,11 @@ import { EditUserModalComponent } from './edit-user-modal.component';
         </div>
 
         <!-- Users List -->
-        <div *ngIf="!loading && !error" class="users-container">
-          <div *ngFor="let user of users" class="user-item">
+        <div
+          *ngIf="!(loading$ | async) && !(error$ | async)"
+          class="users-container"
+        >
+          <div *ngFor="let user of users$ | async" class="user-item">
             <div class="user-info">
               <div class="user-avatar">
                 <i class="pi pi-user"></i>
@@ -94,7 +103,7 @@ import { EditUserModalComponent } from './edit-user-modal.component';
           </div>
 
           <!-- Empty State -->
-          <div *ngIf="users.length === 0" class="empty-state">
+          <div *ngIf="(users$ | async)?.length === 0" class="empty-state">
             <i class="pi pi-users empty-icon"></i>
             <h3>No users found</h3>
             <p>There are no users to display at the moment.</p>
@@ -105,8 +114,8 @@ import { EditUserModalComponent } from './edit-user-modal.component';
       <!-- Edit User Modal -->
       <app-edit-user-modal
         [visible]="showEditModal"
-        [user]="selectedUser"
-        [saving]="saving"
+        [user]="selectedUser$ | async"
+        [saving]="(saving$ | async) || false"
         (save)="onSaveUser($event)"
         (cancel)="onCancelEdit()"
       ></app-edit-user-modal>
@@ -115,6 +124,7 @@ import { EditUserModalComponent } from './edit-user-modal.component';
       <p-toast position="top-right"></p-toast>
     </div>
   `,
+
   styles: [
     `
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -309,41 +319,48 @@ import { EditUserModalComponent } from './edit-user-modal.component';
     `,
   ],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private messageService = inject(MessageService);
+  private destroy$ = new Subject<void>();
 
-  users: User[] = [];
-  loading = true;
-  error: string | null = null;
+  // Observable properties from store
+  users$: Observable<User[] | null>;
+  selectedUser$: Observable<User | null>;
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
+  saving$: Observable<boolean>;
+
   showEditModal = false;
-  saving = false;
-  selectedUser: User | null = null;
 
   constructor(
-    private userService: UserService,
+    private store: Store<AppState>,
     private authUserStateService: AuthUserStateService,
-  ) {}
+  ) {
+    // Initialize observables from store
+    this.users$ = this.store.select(UserSelectors.selectAllUsers);
+    this.selectedUser$ = this.store.select(UserSelectors.selectSelectedUser);
+    this.loading$ = this.store.select(UserSelectors.selectUsersLoading);
+    this.error$ = this.store.select(UserSelectors.selectUsersError);
+    this.saving$ = this.store.select(UserSelectors.selectUsersSaving);
+  }
 
   ngOnInit() {
     this.loadUsers();
+
+    // Subscribe to selected user changes to control modal visibility
+    this.selectedUser$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      this.showEditModal = !!user;
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadUsers() {
-    this.loading = true;
-    this.error = null;
-
-    this.userService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Failed to load users. Please try again.';
-        this.loading = false;
-        console.error('Error loading users:', error);
-      },
-    });
+    this.store.dispatch(UserActions.loadUsers());
   }
 
   isAdmin(): boolean {
@@ -351,51 +368,30 @@ export class DashboardComponent implements OnInit {
   }
 
   editUser(user: User) {
-    this.selectedUser = user;
-    this.showEditModal = true;
+    this.store.dispatch(UserActions.selectUser({ user }));
   }
 
   onCancelEdit() {
-    this.showEditModal = false;
-    this.selectedUser = null;
+    this.store.dispatch(UserActions.clearSelectedUser());
   }
 
   onSaveUser(userData: { firstName: string; lastName: string; email: string }) {
-    if (!this.selectedUser) {
-      return;
-    }
-
-    this.saving = true;
-
-    this.userService.updateUser(this.selectedUser.id, userData).subscribe({
-      next: (user) => {
-        // Update the user in the local array
-        const index = this.users.findIndex((u) => u.id === user.id);
-        if (index !== -1) {
-          this.users[index] = user;
+    this.selectedUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((selectedUser) => {
+        if (selectedUser) {
+          this.store.dispatch(
+            UserActions.updateUser({
+              userId: selectedUser.id,
+              userData,
+            }),
+          );
         }
+      });
+  }
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'User updated successfully',
-        });
-
-        this.showEditModal = false;
-        this.selectedUser = null;
-        this.saving = false;
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to update user. Please try again.',
-        });
-
-        this.saving = false;
-        console.error('Error updating user:', error);
-      },
-    });
+  clearError() {
+    this.store.dispatch(UserActions.clearError());
   }
 
   logout() {

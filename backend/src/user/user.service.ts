@@ -22,7 +22,9 @@ export class UserService {
 
   async findAll(): Promise<Result<User[], Error>> {
     try {
-      const users = await this.userRepo.find();
+      const users = (await this.userRepo.find()).toSorted(
+        (a, b) => a.id - b.id,
+      );
       return ok(users);
     } catch (error) {
       this.logger.error(error);
