@@ -15,4 +15,7 @@ export class UserService {
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/users`);
   }
+  updateUser(id: number, user: Omit<User, 'id'>): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/users/${id}`, user);
+  }
 }
