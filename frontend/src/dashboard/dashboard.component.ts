@@ -124,8 +124,199 @@ import * as UserSelectors from '../users/user.selectors';
       <p-toast position="top-right"></p-toast>
     </div>
   `,
+
   styles: [
-    // ... keep the same styles as the original component
+    `
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+      .dashboard-container {
+        min-height: 100vh;
+        background-color: var(--surface-ground);
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .dashboard-toolbar {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+        width: 100%;
+        max-width: 1200px;
+      }
+
+      .dashboard-title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-color);
+        text-align: center;
+        letter-spacing: -0.02em;
+        width: 100%;
+      }
+
+      .dashboard-content {
+        padding: 2rem;
+        width: 100%;
+        max-width: 1200px;
+      }
+
+      .error-message {
+        margin-bottom: 1rem;
+        width: 100%;
+      }
+
+      .loading-container {
+        width: 100%;
+      }
+
+      .users-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .user-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: var(--surface-card);
+        border-radius: 12px;
+        border: 1px solid var(--surface-border);
+        transition: all 0.2s ease;
+      }
+
+      .user-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+      }
+
+      .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--primary-600)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        flex: 1;
+      }
+
+      .user-name {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color);
+        line-height: 1.3;
+      }
+
+      .user-email {
+        margin: 0 0 0.25rem 0;
+        color: var(--text-color-secondary);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .user-id {
+        color: var(--text-color-secondary);
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+
+      .user-actions {
+        flex-shrink: 0;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-color-secondary);
+      }
+
+      .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--text-color-secondary);
+        opacity: 0.5;
+      }
+
+      .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .empty-state p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      /* Edit Modal Styles - Removed since they're now in the separate component */
+
+      @media (max-width: 768px) {
+        .dashboard-content {
+          padding: 1rem;
+        }
+
+        .dashboard-title {
+          font-size: 1.5rem;
+        }
+
+        .user-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+          padding: 1.25rem;
+        }
+
+        .user-info {
+          width: 100%;
+        }
+
+        .user-actions {
+          width: 100%;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .empty-state {
+          padding: 2rem 1rem;
+        }
+
+        .empty-icon {
+          font-size: 3rem;
+        }
+      }
+    `,
   ],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
