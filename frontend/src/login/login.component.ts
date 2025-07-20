@@ -229,11 +229,9 @@ export class LoginComponent {
         console.log('Login successful:', response);
         this.successMessage.set('Login successful! Redirecting...');
         this.authUserState.setUser(response.access_token);
-
-        // Redirect to dashboard or home page after successful login
-        // setTimeout(() => {
-        //   this.router.navigate(['/dashboard']);
-        // }, 1500);
+        setTimeout(() => {
+          this.router.navigate(['/dashboard']);
+        }, 500);
       } catch (error: any) {
         console.error('Login failed:', error);
 
